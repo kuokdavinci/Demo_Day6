@@ -4,8 +4,9 @@ import { generateOauthState, getStateCookieName } from "../../../../../../../pac
 
 export async function GET() {
   const clientId = process.env.GITHUB_CLIENT_ID;
+  console.log("Debug Login - Client ID:", clientId ? "FOUND (" + clientId.slice(0, 5) + "...)" : "MISSING");
   if (!clientId) {
-    return NextResponse.json({ error: "Missing GITHUB_CLIENT_ID." }, { status: 500 });
+    return NextResponse.json({ error: "Missing GITHUB_CLIENT_ID. Please check your .env file." }, { status: 500 });
   }
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
   const state = generateOauthState();

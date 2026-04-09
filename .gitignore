@@ -4,3 +4,6 @@ coverage
 .env
 dist
 vitest-report
+.env*
+*.local
+.vercel

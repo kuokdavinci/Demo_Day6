@@ -45,6 +45,7 @@ export class MemoryStore {
   private analyses: AnalysisResult[] = [];
   private deliveries: DeliveryRecord[] = [];
   private credentials: StoredCredentials = {};
+  private corrections: CorrectionEntry[] = [];
 
   ensureRepository(repoId: string, repoName: string) {
     if (!this.configs.has(repoId)) {
@@ -126,7 +127,13 @@ export class MemoryStore {
   }
 
   getCorrections(limit = 10) {
+    if (!this.corrections) this.corrections = [];
     return this.corrections.slice(-limit).reverse();
+  }
+
+  saveCorrection(correction: CorrectionEntry) {
+    if (!this.corrections) this.corrections = [];
+    this.corrections.push(correction);
   }
 
   getAnalytics(): AnalyticsSnapshot {
@@ -148,12 +155,12 @@ export class MemoryStore {
     );
 
     return {
-      totalEvents: this.webhookEvents.length,
+      totalEvents: (this.webhookEvents ?? []).length,
       totalAnalyses,
       avgConfidence: Number(avgConfidence.toFixed(2)),
       avgFilesPerPr: Number(avgFilesPerPr.toFixed(2)),
       attentionDistribution,
-      totalCorrections: this.corrections.length
+      totalCorrections: (this.corrections ?? []).length
     };
   }
 }

@@ -71,6 +71,8 @@ export default function HomePage() {
             ))}
           </div>
         )}
+      </section>
+
       <section style={styles.panel}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
           <h3 style={styles.sectionTitle}>System Learning</h3>

@@ -6,7 +6,8 @@ import type {
   IntegrationCredentialsStatus,
   RepoConfig,
   RepoMemory,
-  WebhookEvent
+  WebhookEvent,
+  CorrectionEntry
 } from "../../shared/src/index";
 import { decryptSecret, encryptSecret } from "./secrets";
 

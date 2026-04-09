@@ -1,3 +1,14 @@
+"use client";
+
+import { useState, type CSSProperties, type FormEvent } from "react";
+import type { AnalysisResult, CanonicalBrief } from "../../../../packages/shared/src/index";
+
+interface DemoResponse {
+  brief?: CanonicalBrief;
+  snapshot?: AnalysisResult["snapshot"];
+  error?: string;
+}
+
 const STEPS = [
   "Authenticating with GitHub App...",
   "Fetching PR diff & metadata...",
@@ -100,28 +111,28 @@ export function LiveDemoConsole() {
 
             {result?.error && <div style={errorStyle}>{result.error}</div>}
 
-            {result?.analysis && (
+            {result?.brief && result?.snapshot && (
               <div style={{ display: "grid", gap: 32 }}>
                 <div style={resultHeaderStyle}>
                   <div>
-                    <div style={resultTitleStyle}>{result.analysis.brief.title}</div>
+                    <div style={resultTitleStyle}>{result.brief.title}</div>
                     <div style={resultMetaStyle}>
-                      {result.analysis.brief.attentionLevel.toUpperCase()} LEVEL ·{" "}
-                      {Math.round(result.analysis.brief.confidence * 100)}% CONFIDENCE
+                      {result.brief.attentionLevel.toUpperCase()} LEVEL ·{" "}
+                      {Math.round(result.brief.confidence * 100)}% CONFIDENCE
                     </div>
                   </div>
                 </div>
 
                 <div style={{ display: "grid", gap: 24 }}>
-                  <ResultSection title="Abstract" items={result.analysis.brief.whatChanged} />
-                  <ResultSection title="Technical Focus" items={result.analysis.brief.reviewerFocus} />
-                  <ResultSection title="Test Coverage" items={result.analysis.brief.testImpact} />
+                  <ResultSection title="Abstract" items={result.brief.whatChanged} />
+                  <ResultSection title="Technical Focus" items={result.brief.reviewerFocus} />
+                  <ResultSection title="Test Coverage" items={result.brief.testImpact} />
                 </div>
 
                 <div style={deliveryBoxStyle}>
                   <h4 style={deliveryTitleStyle}>Notification Delivery</h4>
                   <div style={{ display: "grid", gap: 8 }}>
-                    {(result.deliveries ?? []).map((delivery) => (
+                    {(result as any).deliveries?.map((delivery: any) => (
                       <div key={delivery.channel} style={deliveryItemStyle}>
                         <span>{delivery.channel}</span>
                         <span style={{ color: delivery.status === "ok" ? "#2d7e49" : "#8a3a26" }}>

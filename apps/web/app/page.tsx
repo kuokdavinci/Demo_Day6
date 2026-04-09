@@ -40,8 +40,6 @@ export default function HomePage() {
       <section style={styles.grid}>
         <Card title="Webhook Events" value={analytics.totalEvents} detail="Unique GitHub deliveries processed." />
         <Card title="Analysis Runs" value={analytics.totalAnalyses} detail="Canonical PR briefs generated." />
-        <Card title="Acceptance Rate" value="92%" detail="PR descriptions kept without major edits." />
-        <Card title="Time Saved" value="12.4h" detail="Estimated engineering time recovered." />
       </section>
 
       <section style={styles.panel}>

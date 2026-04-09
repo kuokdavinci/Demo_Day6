@@ -81,12 +81,18 @@ export async function POST(request: Request) {
     const body = (await request.json()) as DemoRequest;
     const fakeWebhookPayload = await fetchPullRequestWebhookShape(body);
     const event = await buildWebhookEventFromGitHubPayload(fakeWebhookPayload, "opened", crypto.randomUUID());
+    const { decryptSecret } = await import("../../../../../../packages/db/src/secrets");
+    const snapshot = event.snapshot;
+    const config = store.getConfig(snapshot.repoId, snapshot.repoName);
+    const slackUrl = config.slackWebhookUrl ? decryptSecret(config.slackWebhookUrl) : undefined;
+    const discordUrl = config.discordWebhookUrl ? decryptSecret(config.discordWebhookUrl) : undefined;
+
     const result = await handleWebhookEvent(event, {
       store,
       provider: createProvider(),
       github: createGitHubAdapter(),
-      slack: createSlackAdapter(undefined, store),
-      discord: createDiscordAdapter(undefined, store)
+      slack: createSlackAdapter(slackUrl, store),
+      discord: createDiscordAdapter(discordUrl, store)
     });
     return NextResponse.json(result);
   } catch (error) {

@@ -15,6 +15,13 @@ type Status = {
   aiProviderMode: "heuristic" | "groq";
 };
 
+type RepoSummary = {
+  repoId: string;
+  repoName: string;
+  hasSlack: boolean;
+  hasDiscord: boolean;
+};
+
 const initialForm = {
   slackWebhookUrl: "",
   discordWebhookUrl: ""
@@ -52,36 +59,51 @@ const StatusPill = ({ ok, label }: { ok: boolean; label: string }) => {
 export function IntegrationsConsole() {
   const [form, setForm] = useState(initialForm);
   const [status, setStatus] = useState<Status | null>(null);
+  const [repos, setRepos] = useState<RepoSummary[]>([]);
+  const [selectedRepoId, setSelectedRepoId] = useState<string | null>(null);
   const [message, setMessage] = useState<string>("");
   const [isPending, startTransition] = useTransition();
 
+  const fetchIntegrations = async () => {
+    const response = await fetch("/api/settings/integrations");
+    const data = await response.json();
+    setStatus(data.status);
+    setRepos(data.repos || []);
+  };
+
   useEffect(() => {
-    startTransition(async () => {
-      const response = await fetch("/api/settings/integrations");
-      const data = (await response.json()) as { status: Status };
-      setStatus(data.status);
+    startTransition(() => {
+      fetchIntegrations();
     });
   }, []);
 
   async function save(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (!selectedRepoId) return;
+
     setMessage("");
-    const payload = Object.fromEntries(Object.entries(form).filter(([, value]) => String(value).trim() !== ""));
+    const payload = {
+      repoId: selectedRepoId,
+      slackWebhookUrl: form.slackWebhookUrl,
+      discordWebhookUrl: form.discordWebhookUrl
+    };
 
     const response = await fetch("/api/settings/integrations", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload)
     });
-    const data = (await response.json()) as { ok: boolean; status: Status };
+    const data = await response.json();
     setStatus(data.status);
     setMessage(data.ok ? "Configuration updated successfully." : "Update failed.");
-    setForm((current) => ({
-      ...current,
-      slackWebhookUrl: "",
-      discordWebhookUrl: ""
-    }));
+    
+    // Refresh repo list to see new status
+    await fetchIntegrations();
+
+    setForm({ slackWebhookUrl: "", discordWebhookUrl: "" });
   }
+
+  const selectedRepo = repos.find(r => r.repoId === selectedRepoId);
 
   return (
     <div style={{ display: "grid", gap: 48 }}>
@@ -89,39 +111,60 @@ export function IntegrationsConsole() {
         <div style={heroEyebrowStyle}>Integrations</div>
         <h2 style={heroTitleStyle}>Connect your stack</h2>
         <p style={heroCopyStyle}>
-          Configure GitHub, Slack, and Discord to enable real-time PR analysis. Secrets are encrypted and stored in the
-          local runtime.
+          Configure GitHub, Slack, and Discord to enable real-time PR analysis. Secrets are encrypted and stored per repository.
         </p>
       </section>
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 280px", gap: 40 }}>
         <div style={{ display: "grid", gap: 48 }}>
+          
           <section style={panelStyle}>
-            <h3 style={sectionTitleStyle}>Runtime Health</h3>
-            <div style={statusGridStyle}>
-              <StatusPill ok={Boolean(status?.githubAppConfigured)} label="GitHub App" />
-              <StatusPill ok={Boolean(status?.githubOAuthConfigured)} label="GitHub OAuth" />
-              <StatusPill ok={Boolean(status?.githubWebhookSecretConfigured)} label="Webhook Secret" />
-              <StatusPill ok={Boolean(status?.groqConfigured)} label="Groq AI" />
-              <StatusPill ok={Boolean(status?.slackConfigured)} label="Slack" />
-              <StatusPill ok={Boolean(status?.discordConfigured)} label="Discord" />
-            </div>
+            <h3 style={sectionTitleStyle}>Your Monitored Repositories</h3>
+            <p style={subtextStyle}>Select a repository to configure its Slack and Discord webhooks.</p>
+            
+             <div style={{ display: "grid", gap: 8, marginTop: 16 }}>
+                {repos.length === 0 ? (
+                  <div style={{ padding: 16, background: "#f9f7f2", borderRadius: 8, fontSize: 14 }}>
+                    No repositories found. Please install the GitHub app on a repository to get started.
+                  </div>
+                ) : (
+                  repos.map((repo) => (
+                    <div 
+                      key={repo.repoId} 
+                      onClick={() => setSelectedRepoId(repo.repoId)}
+                      style={{ 
+                        ...repoItemStyle, 
+                        border: selectedRepoId === repo.repoId ? "2px solid #5f5449" : "1px solid #ede8e0",
+                        background: selectedRepoId === repo.repoId ? "#f3f0ea" : "white"
+                      }}>
+                      <span style={{ fontWeight: 600 }}>{repo.repoName}</span>
+                      <div style={{ display: "flex", gap: 8 }}>
+                          {repo.hasSlack && <span style={webhookBadgeStyle}>Slack</span>}
+                          {repo.hasDiscord && <span style={webhookBadgeStyle}>Discord</span>}
+                      </div>
+                    </div>
+                  ))
+                )}
+             </div>
           </section>
 
+          {selectedRepoId && (
           <form onSubmit={save} style={{ display: "grid", gap: 48 }}>
             <section style={panelStyle}>
-              <h3 style={sectionTitleStyle}>Webhook Delivery</h3>
-              <p style={subtextStyle}>Destination endpoints for real-time notification payloads.</p>
+              <h3 style={sectionTitleStyle}>Webhook Delivery ({selectedRepo?.repoName})</h3>
+              <p style={subtextStyle}>Destination endpoints for {selectedRepo?.repoName} PR notifications.</p>
               <div style={{ display: "grid", gap: 24, marginTop: 32 }}>
                 <Field
                   label="Slack Webhook"
                   value={form.slackWebhookUrl}
                   onChange={(value) => setForm({ ...form, slackWebhookUrl: value })}
+                  placeholder={selectedRepo?.hasSlack ? "Encrypted • Leave blank to keep current" : "https://hooks.slack.com/..."}
                 />
                 <Field
                   label="Discord Webhook"
                   value={form.discordWebhookUrl}
                   onChange={(value) => setForm({ ...form, discordWebhookUrl: value })}
+                  placeholder={selectedRepo?.hasDiscord ? "Encrypted • Leave blank to keep current" : "https://discord.com/api/webhooks/..."}
                 />
               </div>
             </section>
@@ -135,13 +178,15 @@ export function IntegrationsConsole() {
                 <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
                   {message ? <span style={{ fontSize: 13, color: "#2d7e49", fontWeight: 500 }}>{message}</span> : null}
                   <button type="submit" disabled={isPending} style={buttonStyle}>
-                    {isPending ? "Syncing..." : "Update Runtime"}
+                    {isPending ? "Syncing..." : "Save for " + selectedRepo?.repoName.split('/')[1]}
                   </button>
                 </div>
               </div>
             </section>
           </form>
+          )}
         </div>
+
 
         <section style={sidePanelStyle}>
           <h4 style={sideTitleStyle}>System Specs</h4>
@@ -166,12 +211,12 @@ export function IntegrationsConsole() {
   );
 }
 
-function Field({ label, value, onChange }: { label: string; value: string; onChange: (value: string) => void }) {
+function Field({ label, value, onChange, placeholder }: { label: string; value: string; onChange: (value: string) => void; placeholder?: string }) {
   return (
     <label style={labelStyle}>
       <span style={fieldLabelStyle}>{label}</span>
       <input
-        placeholder="https://..."
+        placeholder={placeholder ?? "https://..."}
         value={value}
         onChange={(event) => onChange(event.target.value)}
         style={inputStyle}
@@ -257,4 +302,23 @@ const buttonStyle: CSSProperties = {
   background: "white",
   cursor: "pointer",
   boxShadow: "0 1px 2px rgba(0,0,0,0.05)"
+};
+
+const repoItemStyle: CSSProperties = {
+  display: "flex",
+  justifyContent: "space-between",
+  alignItems: "center",
+  padding: "16px",
+  borderRadius: "8px",
+  cursor: "pointer",
+  transition: "all 0.2s"
+};
+
+const webhookBadgeStyle: CSSProperties = {
+  fontSize: "11px",
+  fontWeight: 600,
+  padding: "4px 8px",
+  borderRadius: "16px",
+  background: "#e1f2e8",
+  color: "#2d7e49"
 };

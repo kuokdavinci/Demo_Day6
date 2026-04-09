@@ -62,6 +62,26 @@ export class MemoryStore {
     return this.configs.get(repoId)!;
   }
 
+  getAllConfigs() {
+    return Array.from(this.configs.values());
+  }
+
+  updateConfig(repoId: string, config: Partial<RepoConfig>) {
+    const current = this.configs.get(repoId);
+    if (!current) return null;
+    const next = { ...current, ...config };
+    
+    // Encrypt webhooks if they are being updated
+    if (config.slackWebhookUrl) next.slackWebhookUrl = encryptSecret(config.slackWebhookUrl);
+    if (config.slackWebhookUrl === "") next.slackWebhookUrl = undefined;
+    
+    if (config.discordWebhookUrl) next.discordWebhookUrl = encryptSecret(config.discordWebhookUrl);
+    if (config.discordWebhookUrl === "") next.discordWebhookUrl = undefined;
+
+    this.configs.set(repoId, next);
+    return next;
+  }
+
   getMemory(repoId: string, repoName: string) {
     this.ensureRepository(repoId, repoName);
     return this.memories.get(repoId)!;

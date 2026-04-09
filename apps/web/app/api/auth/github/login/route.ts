@@ -8,7 +8,12 @@ export async function GET() {
   if (!clientId) {
     return NextResponse.json({ error: "Missing GITHUB_CLIENT_ID. Please check your .env file." }, { status: 500 });
   }
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+  const rawAppUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+  // Loại bỏ dấu / ở cuối nếu có để tránh lỗi double slash
+  const appUrl = rawAppUrl.endsWith("/") ? rawAppUrl.slice(0, -1) : rawAppUrl;
+  
+  console.log("Debug Login - redirect_uri target:", `${appUrl}/api/auth/github/callback`);
+  
   const state = generateOauthState();
   const authorizeUrl = new URL("https://github.com/login/oauth/authorize");
   authorizeUrl.searchParams.set("client_id", clientId);

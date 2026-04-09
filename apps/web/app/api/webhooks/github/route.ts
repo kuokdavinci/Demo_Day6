@@ -29,12 +29,21 @@ export async function POST(request: Request) {
     event = await buildWebhookEventFromGitHubPayload(payload, action, deliveryId);
   }
 
+  const { decryptSecret } = await import("../../../../../../packages/db/src/secrets");
+
+  // Lấy config riêng của Repo này để móc ra đúng Webhook URL
+  const snapshot = event.snapshot;
+  const config = store.getConfig(snapshot.repoId, snapshot.repoName);
+  
+  const slackUrl = config.slackWebhookUrl ? decryptSecret(config.slackWebhookUrl) : undefined;
+  const discordUrl = config.discordWebhookUrl ? decryptSecret(config.discordWebhookUrl) : undefined;
+
   const result = await handleWebhookEvent(event, {
     store,
     provider: createProvider(),
     github: createGitHubAdapter(),
-    slack: createSlackAdapter(undefined, store),
-    discord: createDiscordAdapter(undefined, store)
+    slack: createSlackAdapter(slackUrl, store),
+    discord: createDiscordAdapter(discordUrl, store)
   });
   return NextResponse.json(result);
 }

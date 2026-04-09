@@ -10,7 +10,8 @@ export async function GET(request: Request) {
   const expectedState = cookieStore.get(getStateCookieName())?.value;
   const clientId = process.env.GITHUB_CLIENT_ID;
   const clientSecret = process.env.GITHUB_CLIENT_SECRET;
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+  const rawAppUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+  const appUrl = rawAppUrl.endsWith("/") ? rawAppUrl.slice(0, -1) : rawAppUrl;
 
   if (!code || !state || !expectedState || state !== expectedState) {
     return NextResponse.redirect(`${appUrl}/integrations?auth=failed`);

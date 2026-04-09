@@ -46,6 +46,8 @@ export interface PullRequestSnapshot {
 export interface RepoConfig {
   repoId: string;
   repoName: string;
+  slackWebhookUrl?: string; // Phase 1: Added for per-repo integration
+  discordWebhookUrl?: string; // Phase 1: Added for per-repo integration
   notifySlack: boolean;
   notifyDiscord: boolean;
   quietHours: { startHour: number; endHour: number } | null;

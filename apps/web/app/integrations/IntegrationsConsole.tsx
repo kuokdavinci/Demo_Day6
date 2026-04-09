@@ -79,11 +79,8 @@ export function IntegrationsConsole() {
 
   async function save(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!selectedRepoId) return;
-
     setMessage("");
     const payload = {
-      repoId: selectedRepoId,
       slackWebhookUrl: form.slackWebhookUrl,
       discordWebhookUrl: form.discordWebhookUrl
     };
@@ -96,14 +93,8 @@ export function IntegrationsConsole() {
     const data = await response.json();
     setStatus(data.status);
     setMessage(data.ok ? "Configuration updated successfully." : "Update failed.");
-    
-    // Refresh repo list to see new status
-    await fetchIntegrations();
-
     setForm({ slackWebhookUrl: "", discordWebhookUrl: "" });
   }
-
-  const selectedRepo = repos.find(r => r.repoId === selectedRepoId);
 
   return (
     <div style={{ display: "grid", gap: 48 }}>
@@ -111,7 +102,7 @@ export function IntegrationsConsole() {
         <div style={heroEyebrowStyle}>Integrations</div>
         <h2 style={heroTitleStyle}>Connect your stack</h2>
         <p style={heroCopyStyle}>
-          Configure GitHub, Slack, and Discord to enable real-time PR analysis. Secrets are encrypted and stored per repository.
+          Enter your webhook URLs here. These will be used for all repository analyses and notifications.
         </p>
       </section>
 
@@ -119,72 +110,41 @@ export function IntegrationsConsole() {
         <div style={{ display: "grid", gap: 48 }}>
           
           <section style={panelStyle}>
-            <h3 style={sectionTitleStyle}>Your Monitored Repositories</h3>
-            <p style={subtextStyle}>Select a repository to configure its Slack and Discord webhooks.</p>
+            <h3 style={sectionTitleStyle}>Global Webhooks</h3>
+            <p style={subtextStyle}>Destination endpoints for real-time PR analysis payloads.</p>
             
-             <div style={{ display: "grid", gap: 8, marginTop: 16 }}>
-                {repos.length === 0 ? (
-                  <div style={{ padding: 16, background: "#f9f7f2", borderRadius: 8, fontSize: 14 }}>
-                    No repositories found. Please install the GitHub app on a repository to get started.
-                  </div>
-                ) : (
-                  repos.map((repo) => (
-                    <div 
-                      key={repo.repoId} 
-                      onClick={() => setSelectedRepoId(repo.repoId)}
-                      style={{ 
-                        ...repoItemStyle, 
-                        border: selectedRepoId === repo.repoId ? "2px solid #5f5449" : "1px solid #ede8e0",
-                        background: selectedRepoId === repo.repoId ? "#f3f0ea" : "white"
-                      }}>
-                      <span style={{ fontWeight: 600 }}>{repo.repoName}</span>
-                      <div style={{ display: "flex", gap: 8 }}>
-                          {repo.hasSlack && <span style={webhookBadgeStyle}>Slack</span>}
-                          {repo.hasDiscord && <span style={webhookBadgeStyle}>Discord</span>}
-                      </div>
-                    </div>
-                  ))
-                )}
-             </div>
-          </section>
-
-          {selectedRepoId && (
-          <form onSubmit={save} style={{ display: "grid", gap: 48 }}>
-            <section style={panelStyle}>
-              <h3 style={sectionTitleStyle}>Webhook Delivery ({selectedRepo?.repoName})</h3>
-              <p style={subtextStyle}>Destination endpoints for {selectedRepo?.repoName} PR notifications.</p>
-              <div style={{ display: "grid", gap: 24, marginTop: 32 }}>
+            <form onSubmit={save} style={{ display: "grid", gap: 48, marginTop: 32 }}>
+              <div style={{ display: "grid", gap: 24 }}>
                 <Field
                   label="Slack Webhook"
                   value={form.slackWebhookUrl}
                   onChange={(value) => setForm({ ...form, slackWebhookUrl: value })}
-                  placeholder={selectedRepo?.hasSlack ? "Encrypted • Leave blank to keep current" : "https://hooks.slack.com/..."}
+                  placeholder={status?.slackConfigured ? "Encrypted • Locked" : "https://hooks.slack.com/..."}
                 />
                 <Field
                   label="Discord Webhook"
                   value={form.discordWebhookUrl}
                   onChange={(value) => setForm({ ...form, discordWebhookUrl: value })}
-                  placeholder={selectedRepo?.hasDiscord ? "Encrypted • Leave blank to keep current" : "https://discord.com/api/webhooks/..."}
+                  placeholder={status?.discordConfigured ? "Encrypted • Locked" : "https://discord.com/..."}
                 />
               </div>
-            </section>
 
-            <section style={{ ...panelStyle, background: "#f9f7f2" }}>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                <div>
-                  <h3 style={sectionTitleStyle}>Sync Changes</h3>
-                  <p style={subtextStyle}>Deploy workspace configuration to the active runtime.</p>
+              <section style={{ ...panelStyle, background: "#f9f7f2", padding: 24, borderRadius: 12 }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                  <div>
+                    <h4 style={{ margin: 0, fontSize: 16 }}>Save Configuration</h4>
+                    <p style={{ ...subtextStyle, marginTop: 4 }}>These settings will be used globally.</p>
+                  </div>
+                  <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+                    {message ? <span style={{ fontSize: 13, color: "#2d7e49", fontWeight: 500 }}>{message}</span> : null}
+                    <button type="submit" disabled={isPending} style={buttonStyle}>
+                      {isPending ? "Syncing..." : "Update Runtime"}
+                    </button>
+                  </div>
                 </div>
-                <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-                  {message ? <span style={{ fontSize: 13, color: "#2d7e49", fontWeight: 500 }}>{message}</span> : null}
-                  <button type="submit" disabled={isPending} style={buttonStyle}>
-                    {isPending ? "Syncing..." : "Save for " + selectedRepo?.repoName.split('/')[1]}
-                  </button>
-                </div>
-              </div>
-            </section>
-          </form>
-          )}
+              </section>
+            </form>
+          </section>
         </div>
 
 
@@ -321,4 +281,16 @@ const webhookBadgeStyle: CSSProperties = {
   borderRadius: "16px",
   background: "#e1f2e8",
   color: "#2d7e49"
+};
+
+const clearButtonStyle: CSSProperties = {
+  background: "none",
+  border: "none",
+  padding: 0,
+  fontSize: "12px",
+  color: "#8a3a26",
+  cursor: "pointer",
+  textDecoration: "underline",
+  width: "fit-content",
+  textAlign: "left"
 };

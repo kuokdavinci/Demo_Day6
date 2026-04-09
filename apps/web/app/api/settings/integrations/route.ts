@@ -38,8 +38,14 @@ export async function POST(request: Request) {
   const payload = await request.json();
 
   if (payload.repoId) {
-    // Phase 2: Cập nhật Webhook cho từng Repo
+    // Cài đặt cho từng Repo cụ thể
     store.updateConfig(payload.repoId, {
+      slackWebhookUrl: payload.slackWebhookUrl,
+      discordWebhookUrl: payload.discordWebhookUrl
+    });
+  } else {
+    // Cài đặt TOÀN CỤC (Global) - Lưu vào credentials chung
+    store.saveCredentials({
       slackWebhookUrl: payload.slackWebhookUrl,
       discordWebhookUrl: payload.discordWebhookUrl
     });

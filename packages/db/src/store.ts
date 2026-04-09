@@ -69,14 +69,29 @@ export class MemoryStore {
   updateConfig(repoId: string, config: Partial<RepoConfig>) {
     const current = this.configs.get(repoId);
     if (!current) return null;
-    const next = { ...current, ...config };
     
-    // Encrypt webhooks if they are being updated
-    if (config.slackWebhookUrl) next.slackWebhookUrl = encryptSecret(config.slackWebhookUrl);
-    if (config.slackWebhookUrl === "") next.slackWebhookUrl = undefined;
-    
-    if (config.discordWebhookUrl) next.discordWebhookUrl = encryptSecret(config.discordWebhookUrl);
-    if (config.discordWebhookUrl === "") next.discordWebhookUrl = undefined;
+    const next = { ...current };
+
+    // Chỉ cập nhật nếu trường đó được gửi lên và không phải undefined
+    if (typeof config.slackWebhookUrl !== "undefined") {
+      if (config.slackWebhookUrl === "" || config.slackWebhookUrl === null) {
+        next.slackWebhookUrl = undefined; // Xóa nếu gửi chuỗi rỗng
+      } else {
+        next.slackWebhookUrl = encryptSecret(config.slackWebhookUrl); // Mã hóa nếu có nội dung
+      }
+    }
+
+    if (typeof config.discordWebhookUrl !== "undefined") {
+      if (config.discordWebhookUrl === "" || config.discordWebhookUrl === null) {
+        next.discordWebhookUrl = undefined; // Xóa nếu gửi chuỗi rỗng
+      } else {
+        next.discordWebhookUrl = encryptSecret(config.discordWebhookUrl); // Mã hóa nếu có nội dung
+      }
+    }
+
+    // Các trường khác (notify, quietHours...)
+    if (typeof config.notifySlack !== "undefined") next.notifySlack = config.notifySlack;
+    if (typeof config.notifyDiscord !== "undefined") next.notifyDiscord = config.notifyDiscord;
 
     this.configs.set(repoId, next);
     return next;

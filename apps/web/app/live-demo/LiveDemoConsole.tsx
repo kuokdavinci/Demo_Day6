@@ -111,33 +111,61 @@ export function LiveDemoConsole() {
 
             {result?.error && <div style={errorStyle}>{result.error}</div>}
 
-            {result?.brief && result?.snapshot && (
+            {result?.analysis?.brief && (
               <div style={{ display: "grid", gap: 32 }}>
                 <div style={resultHeaderStyle}>
                   <div>
-                    <div style={resultTitleStyle}>{result.brief.title}</div>
+                    <div style={resultTitleStyle}>{result.analysis.brief.title}</div>
                     <div style={resultMetaStyle}>
-                      {result.brief.attentionLevel.toUpperCase()} LEVEL ·{" "}
-                      {Math.round(result.brief.confidence * 100)}% CONFIDENCE
+                      {result.analysis.brief.attentionLevel.toUpperCase()} LEVEL ·{" "}
+                      {Math.round(result.analysis.brief.confidence * 100)}% CONFIDENCE
                     </div>
                   </div>
                 </div>
 
                 <div style={{ display: "grid", gap: 24 }}>
-                  <ResultSection title="Abstract" items={result.brief.whatChanged} />
-                  <ResultSection title="Technical Focus" items={result.brief.reviewerFocus} />
-                  <ResultSection title="Test Coverage" items={result.brief.testImpact} />
+                  <ResultSection title="Abstract" items={result.analysis.brief.whatChanged} />
+                  <ResultSection title="Technical Focus" items={result.analysis.brief.reviewerFocus} />
+                  
+                  <section style={{ marginTop: 12 }}>
+                    <h4 style={sectionHeadingStyle}>Management Summary</h4>
+                    <p style={{ margin: 0, fontSize: 14, lineHeight: 1.6, color: "#1a1a1a" }}>
+                      {result.analysis.brief.managementSummary}
+                    </p>
+                  </section>
+
+                  <section style={{ marginTop: 12, padding: 16, background: "#f9f7f2", borderRadius: 8, border: "1px solid #efe9e2" }}>
+                    <h4 style={{ ...sectionHeadingStyle, color: "#8c7a6b" }}>🛠️ Technical Summary</h4>
+                    <p style={{ margin: 0, fontSize: 13, lineHeight: 1.6, color: "#453d35", fontFamily: "monospace" }}>
+                      {result.analysis.brief.technicalSummary}
+                    </p>
+                  </section>
                 </div>
 
                 <div style={deliveryBoxStyle}>
-                  <h4 style={deliveryTitleStyle}>Notification Delivery</h4>
-                  <div style={{ display: "grid", gap: 8 }}>
-                    {(result as any).deliveries?.map((delivery: any) => (
-                      <div key={delivery.channel} style={deliveryItemStyle}>
-                        <span>{delivery.channel}</span>
-                        <span style={{ color: delivery.status === "ok" ? "#2d7e49" : "#8a3a26" }}>
-                          {delivery.status.toUpperCase()}
-                        </span>
+                  <h4 style={deliveryTitleStyle}>Notification Delivery Status</h4>
+                  <div style={{ display: "grid", gap: 12, marginTop: 8 }}>
+                    {result.deliveries?.map((delivery: any) => (
+                      <div key={delivery.channel} style={{ 
+                        ...deliveryItemStyle, 
+                        borderLeft: `4px solid ${delivery.status === 'sent' ? '#2d7e49' : '#8a3a26'}`,
+                        background: delivery.status === 'sent' ? '#f0f9f4' : '#fef4f2',
+                        padding: '12px 16px',
+                        borderRadius: '0 8px 8px 0'
+                      }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                          <span style={{ fontWeight: 600, textTransform: "uppercase", fontSize: 12 }}>{delivery.channel}</span>
+                          <span style={{ 
+                            fontSize: 11, 
+                            fontWeight: 700, 
+                            color: delivery.status === "sent" ? "#2d7e49" : "#8a3a26" 
+                          }}>
+                            ● {delivery.status.toUpperCase()}
+                          </span>
+                        </div>
+                        <div style={{ fontSize: 11, color: "#666", marginTop: 4, fontStyle: "italic" }}>
+                           {delivery.message}
+                        </div>
                       </div>
                     ))}
                   </div>

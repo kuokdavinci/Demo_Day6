@@ -7,15 +7,24 @@ import type {
 } from "../../shared/src/index";
 
 const SECRET_PATTERNS = [
-  /ghp_[A-Za-z0-9_]{20,}/g,
-  /sk-[A-Za-z0-9]{16,}/g,
-  /AIza[0-9A-Za-z\-_]{20,}/g,
+  /ghp_[A-Za-z0-9_]{30,}/g, // Updated GitHub
+  /sk-[A-Za-z0-9]{20,}/g, // Updated OpenAI
+  /AIza[0-9A-Za-z\-_]{30,}/g, // Google
+  /AKIA[0-9A-Z]{16}/g, // AWS Access Key
+  /sk_live_[0-9a-zA-Z]{24}/g, // Stripe
   /-----BEGIN [A-Z ]+PRIVATE KEY-----/g,
   /password\s*[:=]\s*["'][^"']+["']/gi,
-  /token\s*[:=]\s*["'][^"']+["']/gi
+  /token\s*[:=]\s*["'][^"']+["']/gi,
+  /secret\s*[:=]\s*["'][^"']+["']/gi
 ];
 
-const IRRELEVANT_PATTERNS = [/package-lock\.json$/, /pnpm-lock\.yaml$/, /yarn\.lock$/, /\.svg$/, /\.png$/, /\.map$/];
+const IRRELEVANT_PATTERNS = [
+  /package-lock\.json$/,
+  /pnpm-lock\.yaml$/,
+  /yarn\.lock$/,
+  /\.(svg|png|jpg|jpeg|gif|ico|woff|woff2|ttf|eot)$/,
+  /\.map$/
+];
 
 export function filterRelevantFiles(files: PullRequestFile[], memory: RepoMemory) {
   return files.filter((file) => {

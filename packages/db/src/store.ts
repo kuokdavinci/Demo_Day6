@@ -125,6 +125,10 @@ export class MemoryStore {
     return this.analyses.slice(-limit).reverse();
   }
 
+  getCorrections(limit = 10) {
+    return this.corrections.slice(-limit).reverse();
+  }
+
   getAnalytics(): AnalyticsSnapshot {
     const totalAnalyses = this.analyses.length;
     const avgConfidence =
@@ -148,7 +152,8 @@ export class MemoryStore {
       totalAnalyses,
       avgConfidence: Number(avgConfidence.toFixed(2)),
       avgFilesPerPr: Number(avgFilesPerPr.toFixed(2)),
-      attentionDistribution
+      attentionDistribution,
+      totalCorrections: this.corrections.length
     };
   }
 }

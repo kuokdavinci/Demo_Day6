@@ -8,7 +8,8 @@ export type GitHubEventType =
   | "review_submitted"
   | "converted_to_draft"
   | "closed"
-  | "merged";
+  | "merged"
+  | "edited";
 
 export type AttentionLevel = "low" | "medium" | "high";
 export type AnalysisStrategy = "shallow" | "normal" | "deep" | "partial";
@@ -104,6 +105,8 @@ export interface CanonicalBrief {
   missingContext: string[];
   importantFiles: string[];
   disclaimer: string;
+  managementSummary: string;
+  technicalSummary: string;
 }
 
 export interface NotificationPayload {
@@ -142,6 +145,16 @@ export interface AnalyticsSnapshot {
   avgConfidence: number;
   avgFilesPerPr: number;
   attentionDistribution: Record<AttentionLevel, number>;
+  totalCorrections: number;
+}
+
+export interface CorrectionEntry {
+  repoId: string;
+  prNumber: number;
+  author: string;
+  originalDescription: string;
+  revisedDescription: string;
+  timestamp: string;
 }
 
 export interface IntegrationCredentialsInput {

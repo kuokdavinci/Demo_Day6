@@ -54,27 +54,78 @@ export class RealSlackAdapter implements SlackAdapter {
       };
     }
 
+    const attentionEmoji = result.brief.attentionLevel === "high" ? "🚨" : result.brief.attentionLevel === "medium" ? "⚠️" : "📘";
+
+    const blocks = [
+      {
+        type: "header",
+        text: {
+          type: "plain_text",
+          text: `${attentionEmoji} PR Intelligence: ${result.snapshot.repoName} #${result.snapshot.prNumber}`
+        }
+      },
+      {
+        type: "section",
+        text: {
+          type: "mrkdwn",
+          text: `*Title:* ${result.snapshot.title}\n*Author:* ${result.snapshot.author}\n*Attention Level:* ${attentionEmoji} \`${result.brief.attentionLevel.toUpperCase()}\``
+        }
+      },
+      {
+        type: "divider"
+      },
+      {
+        type: "section",
+        text: {
+          type: "mrkdwn",
+          text: `*💡 Overview*\n${result.brief.managementSummary}`
+        }
+      },
+      {
+        type: "section",
+        fields: [
+          {
+            type: "mrkdwn",
+            text: `*Confidence:* ${Math.round(result.brief.confidence * 100)}%`
+          },
+          {
+            type: "mrkdwn",
+            text: `*Files Changed:* ${result.snapshot.files.length}`
+          }
+        ]
+      },
+      {
+        type: "actions",
+        elements: [
+          {
+            type: "button",
+            text: {
+              type: "plain_text",
+              text: "🔍 Review Now",
+              emoji: true
+            },
+            url: result.snapshot.url,
+            style: "primary"
+          },
+          {
+            type: "button",
+            text: {
+              type: "plain_text",
+              text: "📁 View Files",
+              emoji: true
+            },
+            url: `${result.snapshot.url}/files`
+          }
+        ]
+      }
+    ];
+
     const response = await fetch(this.webhookUrl, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        text: `${result.slackPayload.heading} · ${result.brief.attentionLevel}`,
-        blocks: [
-          {
-            type: "section",
-            text: {
-              type: "mrkdwn",
-              text: `*${result.slackPayload.heading}*\nAttention: *${result.brief.attentionLevel}* · Confidence: *${result.brief.confidence}*`
-            }
-          },
-          {
-            type: "section",
-            text: {
-              type: "mrkdwn",
-              text: result.slackPayload.summary.map((item) => `• ${item}`).join("\n")
-            }
-          }
-        ]
+        text: `${attentionEmoji} PR Analysis for ${result.snapshot.repoName} #${result.snapshot.prNumber}`,
+        blocks
       })
     });
 

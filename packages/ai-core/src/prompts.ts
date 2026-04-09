@@ -123,6 +123,8 @@ export function synthesisMessages(
           confidence: "number 0-1",
           missingContext: ["string"],
           importantFiles: ["string"],
+          managementSummary: "string (1-2 sentences high-level business impact)",
+          technicalSummary: "string (detailed engineering changes and logic flow)",
           disclaimer: "string"
         },
         repo: context.snapshot.repoName,

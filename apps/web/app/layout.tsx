@@ -67,10 +67,11 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
 const styles: Record<string, CSSProperties> = {
   body: {
     margin: 0,
-    fontFamily: "Georgia, Times, serif",
-    background:
-      "radial-gradient(circle at top left, rgba(248,228,196,0.7), transparent 30%), linear-gradient(180deg, #f6f1e8 0%, #efe6d8 100%)",
-    color: "#1d1b16"
+    fontFamily:
+      'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+    background: "#fdfcfb",
+    color: "#1a1a1a",
+    WebkitFontSmoothing: "antialiased"
   },
   shell: {
     display: "grid",
@@ -78,70 +79,76 @@ const styles: Record<string, CSSProperties> = {
     gridTemplateColumns: "280px 1fr"
   },
   sidebar: {
-    borderRight: "1px solid rgba(29,27,22,0.08)",
-    padding: "32px 24px",
-    background: "rgba(255,255,255,0.45)",
-    backdropFilter: "blur(10px)"
+    borderRight: "1px solid #efe9e2",
+    padding: "48px 32px",
+    background: "#f9f7f2",
+    position: "sticky",
+    top: 0,
+    height: "100vh"
   },
   eyebrow: {
-    fontSize: 12,
-    letterSpacing: "0.16em",
+    fontSize: 10,
+    fontWeight: 700,
+    letterSpacing: "0.1em",
     textTransform: "uppercase",
-    color: "#7b5b2d"
+    color: "#8c7a6b"
   },
   brand: {
-    margin: "8px 0 12px",
-    fontSize: 30
+    margin: "16px 0 20px",
+    fontSize: 24,
+    fontWeight: 600,
+    letterSpacing: "-0.01em"
   },
   copy: {
     margin: 0,
-    color: "#4a4138",
-    lineHeight: 1.5
+    color: "#6f6255",
+    lineHeight: 1.6,
+    fontSize: 13,
+    fontWeight: 400
   },
   sessionBox: {
-    marginTop: 24,
-    padding: 16,
+    marginTop: 32,
+    padding: "20px",
     borderRadius: 16,
-    background: "rgba(255,255,255,0.72)"
+    background: "white",
+    border: "1px solid #ede8e0"
   },
   sessionLabel: {
-    fontSize: 12,
+    fontSize: 10,
+    fontWeight: 700,
     letterSpacing: "0.08em",
     textTransform: "uppercase",
-    color: "#7b5b2d"
+    color: "#8c7a6b"
   },
   sessionName: {
-    marginTop: 6,
-    fontWeight: 700
+    marginTop: 8,
+    fontWeight: 600,
+    fontSize: 14
   },
   sessionSubtle: {
-    marginTop: 4,
-    color: "#5f5449"
-  },
-  sessionButton: {
-    marginTop: 12,
-    border: 0,
-    borderRadius: 12,
-    padding: "10px 12px",
-    font: "inherit",
-    cursor: "pointer",
-    background: "#1d1b16",
-    color: "white"
+    marginTop: 2,
+    color: "#9a8a78",
+    fontSize: 12
   },
   nav: {
-    marginTop: 32,
+    marginTop: 48,
     display: "flex",
     flexDirection: "column",
-    gap: 12
+    gap: 4
   },
   navItem: {
-    padding: "12px 14px",
-    borderRadius: 12,
-    color: "#1d1b16",
-    background: "rgba(255,255,255,0.7)",
-    textDecoration: "none"
+    padding: "10px 14px",
+    borderRadius: 8,
+    color: "#4a4138",
+    fontSize: 14,
+    fontWeight: 500,
+    textDecoration: "none",
+    transition: "background 0.2s"
   },
   main: {
-    padding: 32
+    padding: "64px 80px",
+    maxWidth: 1200,
+    margin: "0 auto",
+    width: "100%"
   }
 };

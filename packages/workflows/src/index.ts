@@ -56,6 +56,36 @@ export async function handleWebhookEvent(event: WebhookEvent, deps: WorkflowDepe
     await retryOnce(() => deps.slack.send(analysis), "Slack"),
     await retryOnce(() => deps.discord.send(analysis), "Discord")
   ];
+
+  if (snapshot.eventType === "opened") {
+    deliveries.push(await deps.github.updatePullRequestDescription(analysis));
+  }
+
+  if (snapshot.eventType === "edited") {
+    // Basic heuristics for "learning":
+    // If the user manually edited the PR description after our AI run,
+    // we should track it as a correction.
+    const lastAnalysis = store.getRecentActivity(2).find(a => a.snapshot.prNumber === snapshot.prNumber);
+    if (lastAnalysis) {
+      store.saveCorrection({
+        repoId: snapshot.repoId,
+        prNumber: snapshot.prNumber,
+        author: snapshot.author,
+        originalDescription: lastAnalysis.brief.managementSummary, // Simplified comparison
+        revisedDescription: snapshot.body || "",
+        timestamp: new Date().toISOString()
+      });
+      
+      // Update memory: If they mentioned a specific file/module we missed, add to highRisk
+      // This is a dummy heuristic for demo purposes
+      if (snapshot.body?.toLowerCase().includes("security") || snapshot.body?.toLowerCase().includes("auth")) {
+        store.updateMemory(snapshot.repoId, { 
+          highRiskModules: Array.from(new Set([...memory.highRiskModules, "security", "auth"]))
+        });
+      }
+    }
+  }
+
   store.saveDeliveries(deliveries);
 
   if (analysis.brief.attentionLevel === "high") {

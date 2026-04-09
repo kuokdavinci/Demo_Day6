@@ -100,6 +100,8 @@ export class HeuristicAiProvider implements AiProvider {
       confidence: Number(confidenceBase.toFixed(2)),
       missingContext,
       importantFiles: context.importantFiles,
+      managementSummary: `Summary of changes for ${context.snapshot.title}. Potential impact on ${fileSummaries.length} files.`,
+      technicalSummary: `Engineered changes in ${context.snapshot.repoName}. Files touched: ${context.importantFiles.join(", ")}.`,
       disclaimer: "AI-generated summary. Use it to triage the review, not to replace human code review."
     };
   }

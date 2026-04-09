@@ -42,20 +42,35 @@ export class RealDiscordAdapter implements DiscordAdapter {
       };
     }
 
+    const attentionEmoji = result.brief.attentionLevel === "high" ? "🚨" : result.brief.attentionLevel === "medium" ? "⚠️" : "📘";
+
     const response = await fetch(this.webhookUrl, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        content: `${result.discordPayload.heading} · ${result.brief.attentionLevel}`,
+        content: `${attentionEmoji} **PR Analysis: ${result.snapshot.repoName} #${result.snapshot.prNumber}**`,
         embeds: [
           {
-            title: result.discordPayload.heading,
-            description: result.discordPayload.summary.join("\n"),
+            title: result.snapshot.title,
+            url: result.snapshot.url,
+            description: result.brief.managementSummary,
             color: result.brief.attentionLevel === "high" ? 15158332 : result.brief.attentionLevel === "medium" ? 15844367 : 3066993,
             fields: [
-              { name: "Attention", value: result.brief.attentionLevel, inline: true },
-              { name: "Confidence", value: String(result.brief.confidence), inline: true }
-            ]
+              { name: "Author", value: result.snapshot.author, inline: true },
+              { name: "Attention", value: `${attentionEmoji} ${result.brief.attentionLevel.toUpperCase()}`, inline: true },
+              { name: "Confidence", value: `${Math.round(result.brief.confidence * 100)}%`, inline: true },
+              {
+                name: "Technical Summary",
+                value:
+                  result.brief.technicalSummary.length > 1024
+                    ? result.brief.technicalSummary.slice(0, 1021) + "..."
+                    : result.brief.technicalSummary
+              }
+            ],
+            footer: {
+              text: "PR Intelligence Agent · AI Powered"
+            },
+            timestamp: new Date().toISOString()
           }
         ]
       })

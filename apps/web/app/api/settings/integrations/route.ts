@@ -9,13 +9,22 @@ export async function GET() {
   const cookieStore = await cookies();
   const session = verifySession(cookieStore.get(getSessionCookieName())?.value);
   
-  const allConfigs = store.getAllConfigs();
-  // Lọc ra danh sách Repo thuộc về User hiện tại (owner/repo)
-  const repos = session ? allConfigs.filter(c => c.repoName.startsWith(`${session.login}/`)) : [];
+  if (!session) {
+    return NextResponse.json({ status: store.getCredentialsStatus(), repos: [] });
+  }
 
+  // 1. Lấy danh sách Repo từ bộ nhớ Local (đã cấu hình Webhook)
+  const allConfigs = store.getAllConfigs();
+  const localRepos = allConfigs.filter(c => c.repoName.startsWith(`${session.login}/`));
+
+  // 2. (Opt-in) Nếu bạn muốn hiện cả những Repo "chờ cấu hình" 
+  // Chúng ta sẽ coi localRepos là danh sách chính để quản lý config.
+  // Để repo xuất hiện ở đây, bạn chỉ cần chạy Live Demo 1 lần cho repo đó
+  // HOẶC tôi sẽ trả về chính xác danh sách repo từ Store.
+  
   return NextResponse.json({
     status: store.getCredentialsStatus(),
-    repos: repos.map(r => ({
+    repos: localRepos.map(r => ({
       repoId: r.repoId,
       repoName: r.repoName,
       hasSlack: !!r.slackWebhookUrl,
